@@ -1,0 +1,280 @@
+{
+    "_schema": {
+      "columns": {
+        "background": {
+          "config": {
+            "derivativeFn": "import Replicate from \"replicate\";\n\nconst derivative: Derivative = async ({ row, ref, db, storage, auth, logging }) => {\n\n  // Check if lessonsCreated is an array and not empty, and check limestones\n  if (!Array.isArray(row.lessonsCreated) || row.lessonsCreated.length === 0 || !row.unit || row.unit.length === 0) {\n    return undefined;\n  }\n\n  const replicateKey = await rowy.secrets.get('replicate');\n  const replicate = new Replicate({\n    //auth: process.env.replicateKey,\n    auth: replicateKey,\n  });\n\n  const unitname = row.unit.unit;\n   try {\n\n  const response = await replicate.predictions.create({\n    version: \"39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b\",\n    input: {\n      width: 768,\n      height: 1024,\n      prompt: `A fantasy background image for the game theme: ${unitname}`\n    },\n    webhook: \"https://rowy-hooks-pom6wvgduq-as.a.run.app/wh/units/exjYFSqn7QMV9kX8Z5hL\",\n    webhook_events_filter: [\"completed\"]\n  });\n\n    \n    await ref.update({ genImageJson: response }); \n\n    return {\n      id: response.id,\n      status: response.status\n    };\n  } catch (error) {\n    logging.error('Error during Replicate prediction:', error);\n    throw error;\n  }\n};\n\nexport default derivative;\n",
+            "listenerFields": [
+              "lessonsCreated",
+              "unit"
+            ],
+            "renderFieldType": "JSON"
+          },
+          "fieldName": "background",
+          "index": 11,
+          "key": "background",
+          "name": "background",
+          "type": "DERIVATIVE"
+        },
+        "bgImage": {
+          "config": {
+            "derivativeFn": "const derivative: Derivative = async ({ row, ref, db, storage, auth }) => {\n  if (row.genImageJson) {\n    const genImageUrls = Array.isArray(row.genImageJson) ? row.genImageJson : [row.genImageJson];\n\n    if (genImageUrls.length > 0) {\n      const genImageUrl = genImageUrls[0];\n      const genImage = await rowy.storage.upload.url(genImageUrl, {\n        folderPath: ref.path + '/bgImage/'\n      });\n      return genImage.downloadURL;\n    } else {\n      return null; // or any default value you prefer when no URLs are present\n    }\n  } else {\n    return null; // or any default value you prefer when genImageJson is not present\n  }\n};\n\nexport default derivative;\n",
+            "listenerFields": [
+              "genImageJson"
+            ],
+            "renderFieldType": "URL"
+          },
+          "fieldName": "bgImage",
+          "index": 13,
+          "key": "bgImage",
+          "name": "bgImage",
+          "type": "DERIVATIVE"
+        },
+        "createAt": {
+          "config": {
+          },
+          "fieldName": "createAt",
+          "index": 0,
+          "key": "createAt",
+          "name": "Create At",
+          "type": "DATE_TIME"
+        },
+        "createBy": {
+          "config": {
+          },
+          "fieldName": "createBy",
+          "index": 1,
+          "key": "createBy",
+          "name": "Create by",
+          "type": "REFERENCE"
+        },
+        "display": {
+          "config": {
+            "derivativeFn": "const derivative: Derivative = async ({ row, ref, db, storage, auth, logging }) => {\n  logging.log(\"derivative started\");\n\n  // Check if lessonsCreated is an array and not empty, and check limestones\n  if (!Array.isArray(row.lessonsCreated) || row.lessonsCreated.length === 0 || !row.limestones || row.limestones <= 0) {\n    return false; \n  }\n    return true;\n};\n\nexport default derivative;\n",
+            "listenerFields": [
+              "lessonsCreated",
+              "limestones"
+            ],
+            "renderFieldType": "CHECK_BOX"
+          },
+          "fieldName": "display",
+          "index": 10,
+          "key": "display",
+          "name": "display",
+          "type": "DERIVATIVE"
+        },
+        "genImageJson": {
+          "config": {
+          },
+          "fieldName": "genImageJson",
+          "index": 12,
+          "key": "genImageJson",
+          "name": "genImageJson",
+          "type": "JSON"
+        },
+        "genImageRequest": {
+          "config": {
+            "derivativeFn": "import OpenAI from \"openai\";\nconst derivative: Derivative = async ({ row, ref, db, storage, auth, logging }) => {\n  try {\n    const openaiApiKey = await rowy.secrets.get(\"openai\");\n    const openai = new OpenAI({ apiKey: openaiApiKey });\n\n    // Check if request is created\n    if (!row.request || row.request.length === 0) {\n      return undefined; // No valid request here\n    }\n\n    const prompt = row.request\n    // const prompt = `Create a detailed and vibrant image that embodies the essence of '${topic}' in a learning context. The image should feature a variety of associated items, actions, and concepts that one would expect to find within this subject. Include interactive elements such as people or characters engaging with the environment or objects that are labeled with their names in both English and the target language. The labels should be clear and legible, complementing a scene filled with activity and educational cues. The artwork must be captivating and informative, suitable for a diverse learning audience, from children to adults.`\n     // API call to OpenAI\n    const response = await openai.images.generate({\n      model: \"dall-e-3\",\n      prompt: prompt\n    });\n\n    // Retrieve only the first URL from the response because n Defaults to 1\n    const firstResponseUrl = response.data[0]?.url;\n    if (!firstResponseUrl) {\n      throw new Error('No response data found');\n    }\n    // return firstResponseUrl;\n    logging.log('Image generated:', firstResponseUrl)\n    //Upload to filestore\n    const genRequestImage = await rowy.storage.upload.url(firstResponseUrl, {\n      folderPath: ref.path + '/requestUnit/'\n    });\n    return genRequestImage.downloadURL;\n\n  } catch (error) {\n    if (error instanceof OpenAI.APIError) {\n      logging.log(\"OpenAI API Error:\", error.name, \"Status:\", error.status);\n    } else {\n      logging.log(\"Error:\", error.message);\n    }\n    return undefined;\n  }\n};",
+            "listenerFields": [
+              "request"
+            ],
+            "renderFieldType": "URL"
+          },
+          "fieldName": "genImageRequest",
+          "index": 5,
+          "key": "genImageRequest",
+          "name": "genImageRequest",
+          "type": "DERIVATIVE"
+        },
+        "index": {
+          "config": {
+            "derivativeFn": "const derivative: Derivative = async ({ row, ref, db, storage, auth, logging }) => {\n  logging.log(\"derivative started\");\n\n  // Proceed only if display is true\n    if (row.display) {\n      // Ensure 'language' and 'category' are present and non-empty strings\n      const { language, category } = row.level;\n      if (typeof language === 'string' && language && typeof category === 'string' && category) {\n        // Convert language and category to lowercase\n        const key = `${language.toLowerCase()}_${category.toLowerCase()}`;\n        logging.log(`Key generated: ${key}`);\n        return key;\n      } else {\n        logging.error(\"Language or category is missing or invalid.\");\n        return null;\n      }\n    }\n\n    // Return null if display is not true\n    return null;\n};\n\nexport default derivative;\n",
+            "listenerFields": [
+              "level",
+              "display"
+            ],
+            "renderFieldType": "SIMPLE_TEXT"
+          },
+          "fieldName": "index",
+          "index": 15,
+          "key": "index",
+          "name": "index",
+          "type": "DERIVATIVE"
+        },
+        "lessonsCreated": {
+          "config": {
+          },
+          "fieldName": "lessonsCreated",
+          "index": 8,
+          "key": "lessonsCreated",
+          "name": "lessonsCreated",
+          "type": "ARRAY",
+          "width": 180
+        },
+        "level": {
+          "config": {
+          },
+          "fieldName": "level",
+          "index": 2,
+          "key": "level",
+          "name": "level",
+          "type": "JSON"
+        },
+        "limestones": {
+          "config": {
+          },
+          "fieldName": "limestones",
+          "index": 9,
+          "key": "limestones",
+          "name": "limestones",
+          "type": "NUMBER",
+          "width": 120
+        },
+        "motherTongue": {
+          "config": {
+          },
+          "fieldName": "motherTongue",
+          "index": 3,
+          "key": "motherTongue",
+          "name": "Mother Tongue",
+          "type": "SIMPLE_TEXT",
+          "width": 57
+        },
+        "request": {
+          "config": {
+          },
+          "fieldName": "request",
+          "index": 4,
+          "key": "request",
+          "name": "request",
+          "type": "LONG_TEXT"
+        },
+        "unit": {
+          "config": {
+            "derivativeFn": "import OpenAI from \"openai\";\nconst derivative: Derivative = async ({ row, ref, db, storage, auth, logging }) => {\n  try {\n    const openaiApiKey = await rowy.secrets.get(\"openai\");\n    if (!openaiApiKey) {\n      logging.error('OpenAI API key not found');\n    }\n    const openai = new OpenAI({ apiKey: openaiApiKey });\n\n    // Validate row data\n    if (!row.uploadImage && !row.request) {\n      logging.log('Neither uploadImage nor request is provided. Exiting function.');\n      return 'No action needed';\n    }\n\n    const userText = `Target language: ${row.level?.language || 'English'}. User's mother tongue: ${row.motherTongue || 'en'}. User's level: ${row.level?.category || 'Beginner'} ${(row.level?.score !== undefined && row.level.score !== null) ? `${row.level.score}/5` : '1/5'}`;\n    // Initialize variables for model, focusOn, and userContent\n    let model = 'gpt-4-vision-preview'; // Default model\n    let focusOn = 'image'; // Default focus\n    let userContent;\n\n    // Update variables based on the presence of row.request\n    if (!row.uploadImage) {\n      if (!row.request) {\n        return 'No valid input found';\n      }\n      model = 'gpt-4-1106-preview';\n      focusOn = 'topic';\n      userContent = `TOPIC REQUEST: ${row.request}. ${userText} \\\\n YOUR REPLY JSON: `;\n    } else {\n        userContent = [\n                { type: \"text\", text: userText },\n                { type: \"image_url\", image_url: row.uploadImage },\n            ];\n    };\n\n\n    const systemprompt = `Imagine that you are an AI language teacher working on a language learning app inspired by Duolingo's style. Your task is to create a language learning unit customized to the user's specified level and '${focusOn}' request. The unit should consist of lessons that follow Duolingo's engaging format.\n                            Based on these inputs, generate a language learning unit in the form of a JSON object with the following structure:\n                              {\n                                \"unit\": \"<unit name>\",                        \n                                \"lessons\": [\n                                  {\n                                    \"title\": \"<title>\",\n                                    \"description\": \"<description>\",\n                                    \"words\": []\n                                  },\n                                  ...\n                                ]\n                              } \n                            `;\n\n    // API call to OpenAI\n    const response = await openai.chat.completions.create({\n      model: model,\n      messages: [\n        { role: \"system\", content: systemprompt },\n        { role: \"user\", content: userContent },\n      ],\n      temperature: 1,\n      max_tokens: 4095,\n      top_p: 1,\n      frequency_penalty: 0,\n      presence_penalty: 0,\n    });\n\n    const responseData = response.choices[0].message?.content;\n    if (!responseData) {\n      logging.error('No response data found');\n    }\n    \n    return JSON.parse(responseData);\n    /*\n    // Regular expression to find only JSON object\n      const regex = `/(\\{.*\\}|\\[.*\\])/s`; // find a JSON object or array /(\\{.*\\}|\\[.*\\])/s\n      // Extract JSON string using the regular expression.\n      const jsonPart = responseData.match(regex);\n\n      if (jsonPart) {\n        try {\n            // Parse and return the JSON object/array\n            return JSON.parse(jsonPart[0]);\n        } catch (error) {\n            // Handle parsing error (invalid JSON)\n            logging.error(\"Invalid JSON:\", error);\n            return null;\n        }\n      } else {\n        logging.error('JSON part not found in the response data');\n        return null;\n      }\n      */\n   \n\n  } catch (error) {\n    if (error instanceof OpenAI.APIError) {\n      logging.log(\"OpenAI API Error:\", error.name, \"Status:\", error.status);\n    } else {\n      logging.log(\"Error:\", error.message);\n    }\n\n    return undefined;\n  }\n};\n\nexport default derivative;",
+            "listenerFields": [
+              "level",
+              "motherTongue",
+              "uploadImage",
+              "request"
+            ],
+            "renderFieldType": "JSON"
+          },
+          "fieldName": "unit",
+          "index": 7,
+          "key": "unit",
+          "name": "unit",
+          "type": "DERIVATIVE"
+        },
+        "uploadImage": {
+          "config": {
+          },
+          "fieldName": "uploadImage",
+          "index": 6,
+          "key": "uploadImage",
+          "name": "uploadImage",
+          "type": "URL"
+        },
+        "userCompletedL": {
+          "config": {
+            "parentLabel": [
+              "request"
+            ]
+          },
+          "fieldName": "userCompletedL",
+          "index": 14,
+          "key": "userCompletedL",
+          "name": "userCompletedL",
+          "type": "SUB_TABLE"
+        }
+      },
+      "functionConfigPath": "_rowy_/settings/functions/units",
+      "lastUpdatedGitHubUser": {
+        "email": "sagolab.com@gmail.com",
+        "username": "sagolab.com@gmail.com"
+      },
+      "rowHeight": 41,
+      "subTables": {
+        "userCompletedL": {
+          "columns": {
+            "createdAt": {
+              "config": {
+              },
+              "fieldName": "createdAt",
+              "index": 0,
+              "key": "createdAt",
+              "name": "createdAt",
+              "type": "DATE_TIME"
+            },
+            "lessonsLearn": {
+              "config": {
+              },
+              "fieldName": "lessonsLearn",
+              "index": 2,
+              "key": "lessonsLearn",
+              "name": "lessonsLearn",
+              "type": "JSON"
+            },
+            "user": {
+              "config": {
+              },
+              "fieldName": "user",
+              "index": 1,
+              "key": "user",
+              "name": "user",
+              "type": "REFERENCE"
+            }
+          },
+          "lastUpdatedGitHubUser": {
+            "email": "sagolab.com@gmail.com",
+            "username": "sagolab.com@gmail.com"
+          }
+        }
+      },
+      "webhooks": [
+        {
+          "active": true,
+          "conditions": "const condition: Condition = async({ref, req, db, logging}) => {\n  // WRITE YOUR CODE ONLY BELOW THIS LINE. DO NOT WRITE CODE/COMMENTS OUTSIDE THE FUNCTION BODY\n  logging.log(\"condition started\")\n  \n  return true;\n  // WRITE YOUR CODE ONLY ABOVE THIS LINE. DO NOT WRITE CODE/COMMENTS OUTSIDE THE FUNCTION BODY\n}",
+          "endpoint": "exjYFSqn7QMV9kX8Z5hL",
+          "lastEditor": {
+            "displayName": "Sago Lab",
+            "lastUpdate": 1703690710749,
+            "photoURL": "https://lh3.googleusercontent.com/a/ALm5wu1ibi2uy5Xt-mE_4uUOLvQ-wLN8Yp6AjTyPFGeK=s96-c"
+          },
+          "name": "replicate webhook",
+          "parser": "const basicParser: Parser = async ({ req, db, ref }) => {\n    const { body } = req;\n\n    // auditField\n    const _updatedBy = await rowy.metadata.serviceAccountUser()\n\n    const { id } = body\n    const query = await ref.where(\"genImageJson.id\", \"==\", id).get()\n    if (query.empty) {\n        return null\n    } else {\n        await query.docs[0].ref.update({ genImageJson: body.output, _updatedBy })\n        return null\n    }\n\n}",
+          "type": "basic"
+        }
+      ]
+    },
+    "audit": false,
+    "collection": "units",
+    "description": "table gen Units",
+    "details": "",
+    "id": "units",
+    "name": "Units",
+    "rules": {
+      "create": [
+        "ADMIN",
+        "OWNER"
+      ],
+      "delete": [
+        "ADMIN",
+        "OWNER"
+      ],
+      "read": [
+        "ADMIN",
+        "OWNER"
+      ],
+      "update": [
+        "ADMIN",
+        "OWNER"
+      ]
+    },
+    "sameRuleForSubCollections": false,
+    "searchIndex": "",
+    "section": "Lesson",
+    "tableType": "primaryCollection",
+    "thumbnailURL": "",
+    "_searchEnabled": false
+  }

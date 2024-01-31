@@ -1,0 +1,160 @@
+{
+    "_schema": {
+      "columns": {
+        "createdAt": {
+          "config": {
+          },
+          "fieldName": "createdAt",
+          "index": 0,
+          "key": "createdAt",
+          "name": "createdAt",
+          "type": "DATE_TIME"
+        },
+        "createdBy": {
+          "config": {
+          },
+          "fieldName": "createdBy",
+          "index": 1,
+          "key": "createdBy",
+          "name": "createdBy",
+          "type": "REFERENCE"
+        },
+        "genJson": {
+          "config": {
+          },
+          "fieldName": "genJson",
+          "index": 8,
+          "key": "genJson",
+          "name": "genJson",
+          "type": "JSON"
+        },
+        "index": {
+          "config": {
+          },
+          "fieldName": "index",
+          "index": 3,
+          "key": "index",
+          "name": "index",
+          "type": "NUMBER"
+        },
+        "language": {
+          "config": {
+          },
+          "fieldName": "language",
+          "index": 5,
+          "key": "language",
+          "name": "language",
+          "type": "SIMPLE_TEXT"
+        },
+        "podcastBy": {
+          "config": {
+          },
+          "fieldName": "podcastBy",
+          "index": 2,
+          "key": "podcastBy",
+          "name": "podcastBy",
+          "type": "REFERENCE"
+        },
+        "replicate": {
+          "config": {
+            "derivativeFn": "import Replicate from \"replicate\";\n\nconst derivative: Derivative = async ({ row, ref, db, storage, auth, logging }) => {\n  try {\n    logging.log('Starting the derivative function');\n    //replicate key\n    const replicateKey = await rowy.secrets.get(\"replicate\");\n    if (!replicateKey) {\n      logging.error('replicate API key not found');\n    }\n    const replicate = new Replicate({\n      auth: replicateKey,\n    });\n    \n    \n    // Check if index is valid\n    if (!row.text || row.text.length === 0 || !row.speaker || row.speaker.length === 0) {\n      logging.log(\"Row data not qualified to run. Index or speaker is invalid.\");\n      return null;\n    }\n    logging.log(`Row index and speaker are valid. Index: ${row.index}, Speaker: ${row.speaker}`);\n\n    //Define data to call API\n    const speakerData = row.speaker;\n    const textData = row.text;\n    logging.log(`Speaker data and text data retrieved for API call`);\n    // Mapping from language name to language code\n    const languageMap = {\n      \"English\": \"en\",\n      \"Spanish\": \"es\",\n      \"French\": \"fr\",\n      \"German\": \"de\",\n      \"Italian\": \"it\",\n      \"Portuguese\": \"pt\",\n      \"Polish\": \"pl\",\n      \"Turkish\": \"tr\",\n      \"Russian\": \"ru\",\n      \"Dutch\": \"nl\",\n      \"Czech\": \"cs\",\n      \"Arabic\": \"ar\",\n      \"Chinese\": \"zh\",\n      \"Hungarian\": \"hu\",\n      \"Korean\": \"ko\",\n      \"Hindi\": \"hi\"\n      // Allowed values:en, es, fr, de, it, pt, pl, tr, ru, nl, cs, ar, zh, hu, ko, hi\n    };\n    // Convert language name to code, default to 'en' if not found\n    const languageCode = languageMap[row.language] || 'en';\n\n\n    // Set the model version and input parameters\n    const prediction = await replicate.predictions.create({\n      version: \"684bc3855b37866c0c65add2ff39c78f3dea3f4ff103a436465326e0f438d55e\",\n      input: {\n        text: textData,\n        speaker: speakerData,\n        language: languageCode\n      },\n      webhook: \"https://rowy-hooks-pom6wvgduq-as.a.run.app/wh/voiceClone/wgyVEUzsgIK70ohKDMML\",\n      webhook_events_filter: [\"completed\"]\n    });\n\n    logging.log(`Prediction created with ID: ${prediction.id}`);\n    await ref.update({ genJson: prediction });\n\n    return {\n      id: prediction.id,\n      status: prediction.status\n    };\n\n  } catch (error) {\n    logging.error('Error running the model:', error);\n    return undefined;\n  }\n};\nexport default derivative;",
+            "listenerFields": [
+              "index",
+              "speaker",
+              "language",
+              "text"
+            ],
+            "renderFieldType": "JSON"
+          },
+          "fieldName": "replicate",
+          "index": 7,
+          "key": "replicate",
+          "name": "replicate",
+          "type": "DERIVATIVE"
+        },
+        "speaker": {
+          "config": {
+          },
+          "fieldName": "speaker",
+          "index": 6,
+          "key": "speaker",
+          "name": "speaker",
+          "type": "URL"
+        },
+        "text": {
+          "config": {
+          },
+          "fieldName": "text",
+          "index": 4,
+          "key": "text",
+          "name": "text",
+          "type": "LONG_TEXT"
+        },
+        "voiceAudio": {
+          "config": {
+            "derivativeFn": "const derivative: Derivative = async ({ row, ref, db, storage, auth }) => {\n  if (row.genJson) {\n    const genUrls = Array.isArray(row.genJson) ? row.genJson : [row.genJson];\n\n    if (genUrls.length > 0) {\n      const genUrl = genUrls[0];\n      const genAudio = await rowy.storage.upload.url(genUrl, {\n        folderPath: ref.path + '/voiceClone/'\n      });\n      return genAudio.downloadURL;\n    } else {\n      return null; // or any default value you prefer when no URLs are present\n    }\n  } else {\n    return null; // or any default value you prefer when genImageJson is not present\n  }\n};\n\nexport default derivative;\n",
+            "listenerFields": [
+              "genJson"
+            ],
+            "renderFieldType": "URL"
+          },
+          "fieldName": "voiceAudio",
+          "index": 9,
+          "key": "voiceAudio",
+          "name": "voiceAudio",
+          "type": "DERIVATIVE"
+        }
+      },
+      "functionConfigPath": "_rowy_/settings/functions/voiceClone",
+      "lastUpdatedGitHubUser": {
+        "email": "sagolab.com@gmail.com",
+        "username": "sagolab.com@gmail.com"
+      },
+      "subTables": {
+      },
+      "webhooks": [
+        {
+          "active": true,
+          "conditions": "const condition: Condition = async({ref, req, db, logging}) => {\n  // WRITE YOUR CODE ONLY BELOW THIS LINE. DO NOT WRITE CODE/COMMENTS OUTSIDE THE FUNCTION BODY\n  logging.log(\"condition started\")\n  \n  return true;\n  // WRITE YOUR CODE ONLY ABOVE THIS LINE. DO NOT WRITE CODE/COMMENTS OUTSIDE THE FUNCTION BODY\n}",
+          "endpoint": "wgyVEUzsgIK70ohKDMML",
+          "lastEditor": {
+            "displayName": "Sago Lab",
+            "lastUpdate": 1704159823098,
+            "photoURL": "https://lh3.googleusercontent.com/a/ALm5wu1ibi2uy5Xt-mE_4uUOLvQ-wLN8Yp6AjTyPFGeK=s96-c"
+          },
+          "name": "replicate webhook",
+          "parser": "const basicParser: Parser = async ({ req, db, ref }) => {\n    const { body } = req;\n    // auditField\n    const _updatedBy = await rowy.metadata.serviceAccountUser()\n    const { id } = body\n    const query = await ref.where(\"genJson.id\", \"==\", id).get()\n    if (query.empty) {\n        return null\n    } else {\n        await query.docs[0].ref.update({ genJson: body.output, _updatedBy })\n        return null\n    }\n}",
+          "type": "basic"
+        }
+      ]
+    },
+    "audit": false,
+    "collection": "voiceClone",
+    "description": "",
+    "id": "voiceClone",
+    "name": "Voice Clone",
+    "rules": {
+      "create": [
+        "ADMIN",
+        "OWNER"
+      ],
+      "delete": [
+        "ADMIN",
+        "OWNER"
+      ],
+      "read": [
+        "ADMIN",
+        "OWNER"
+      ],
+      "update": [
+        "ADMIN",
+        "OWNER"
+      ]
+    },
+    "sameRuleForSubCollections": false,
+    "searchIndex": "",
+    "section": "Lesson",
+    "tableType": "primaryCollection",
+    "thumbnailURL": "",
+    "_searchEnabled": false
+  }

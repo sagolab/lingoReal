@@ -1,0 +1,294 @@
+{
+  "_schema": {
+    "columns": {
+      "achImage": {
+        "config": {
+          "derivativeFn": "\nimport OpenAI from \"openai\";\n\nconst derivative: Derivative = async ({ row, ref, db, storage, auth, logging }) => {\n  try {\n    //OpenAI key\n    const openaiApiKey = await rowy.secrets.get(\"openai\");\n    if (!openaiApiKey) {\n      throw new Error('OpenAI API key not found');\n    }\n    const openai = new OpenAI({ apiKey: openaiApiKey });\n\n    // Check if achievement is created and has visualElements\n    if (!row.storyJson || row.storyJson.length === 0) {\n      return undefined; // \n    }\n   \n    const conversation = row.storyJson.map(item => `${item.name}: ${item.text}`).join('\\n');\n    // create Achievement\n    const userprompt = `Conversation Lesson:\\n\\n${conversation}`\n\n    // const systemprompt = `Create an achievement image to reward users after completing a particular language learning lesson. This achievement should encapsulate the key theme and learning objectives of the lesson. Visual Elements: Select visual elements that are representative of the lesson's content for the achievement image. The aim is to craft an achievement image that is both visually appealing and meaningful, highlighting the user's accomplishment in that specific aspect of language learning.`\n    const systemprompt = `Design an achievement card image to reward learners after completing a specific language lesson. The card image with the visual appeal of NFT art and the thematic depth of a Magic: The Gathering collectable card game, tailored to the particular content of the lesson completed.`\n                         // The result should be a one-of-a-kind achievement card image that celebrates the learner's specific achievement, enticing them to continue their language learning quest with enthusiasm and pride\n    const prompt = `${systemprompt}:\\n\\n${userprompt}`\n\n\n    // API call to OpenAI\n    const response = await openai.images.generate({\n      model: \"dall-e-3\",\n      prompt: prompt\n    });\n\n    // Retrieve only the first URL from the response because n Defaults to 1\n    const firstResponseUrl = response.data[0].url;\n    if (!firstResponseUrl) {\n      throw new Error('No response data found');\n    }\n    // Return the first URL\n    return firstResponseUrl;\n\n  } catch (error) {\n    if (error instanceof OpenAI.APIError) {\n      logging.log(\"OpenAI API Error:\", error.name, \"Status:\", error.status);\n    } else {\n      logging.log(\"Error:\", error.message);\n    }\n    return undefined;\n  }\n};\nexport default derivative;\n",
+          "listenerFields": [
+            "storyJson"
+          ],
+          "renderFieldType": "URL"
+        },
+        "fieldName": "achImage",
+        "index": 13,
+        "key": "achImage",
+        "name": "Ach Image",
+        "type": "DERIVATIVE"
+      },
+      "cloudImage": {
+        "config": {
+          "derivativeFn": "const derivative: Derivative = async ({ row, ref, db, storage, auth, logging }) => {\n  // Check if achImage is created and is a non-empty string\n  if (!row.achImage || row.achImage.length === 0) {\n    return undefined;\n  }\n  const uploadUrl = row.achImage\n  //Upload to filestore\n  const genRequestImage = await rowy.storage.upload.url(uploadUrl, {\n    folderPath: ref.path + '/requestStory/'\n  });\n  return genRequestImage.downloadURL;\n\n}\n\nexport default derivative;\n",
+          "listenerFields": [
+            "achImage"
+          ],
+          "renderFieldType": "URL"
+        },
+        "fieldName": "cloudImage",
+        "index": 14,
+        "key": "cloudImage",
+        "name": "Cloud Image",
+        "type": "DERIVATIVE"
+      },
+      "createdAt": {
+        "config": {
+        },
+        "fieldName": "createdAt",
+        "index": 0,
+        "key": "createdAt",
+        "name": "Created At",
+        "type": "DATE_TIME"
+      },
+      "createdBy": {
+        "config": {
+        },
+        "fieldName": "createdBy",
+        "index": 1,
+        "key": "createdBy",
+        "name": "Created By",
+        "type": "REFERENCE"
+      },
+      "display": {
+        "config": {
+        },
+        "fieldName": "display",
+        "index": 16,
+        "key": "display",
+        "name": "Display",
+        "type": "CHECK_BOX"
+      },
+      "elevenlabsVoiceId": {
+        "config": {
+          "derivativeFn": "const derivative = async ({ row, ref, db, storage, auth, actionParams, user, logging }) => {\n  const elevenlabsApiKey = await rowy.secrets.get('elevenlabs');\n\n  if (row.createdBy) {\n    try {\n      //api to get voice list\n      const getDataFromApi = async () => {\n        const apiUrl = 'https://api.elevenlabs.io/v1/voices';\n\n        try {\n          const response = await fetch(apiUrl, {\n            headers: {\n              'Accept': 'application/json',\n              'xi-api-key': elevenlabsApiKey,\n            },\n          });\n          const data = await response.json();\n          // get voice list\n          const voicelist = data.voices.map(voice => {\n            return {\n              voice_id: voice.voice_id,\n              name: voice.name,\n              preview_url: voice.preview_url,\n              labels: voice.labels,\n            };\n          });\n          return voicelist; // here is the list will use for get random 2 voices\n\n        } catch (error) {\n          logging.error('Error fetching data:', error);\n          return [];\n        }\n      };\n\n      // Fetch voicelist from the API\n      const voicelist = await getDataFromApi();\n\n      // Filter male and female voices\n      const maleVoices = voicelist.filter(voice => voice.labels.gender === 'male');\n      const femaleVoices = voicelist.filter(voice => voice.labels.gender === 'female');\n\n      // Get a random index within the range of male and female voicelist\n      const randomMaleIndex = Math.floor(Math.random() * maleVoices.length);\n      const randomFemaleIndex = Math.floor(Math.random() * femaleVoices.length);\n\n      // Get the random male\n      const randomMaleVoiceId = maleVoices[randomMaleIndex].voice_id;\n      const nameMale = maleVoices[randomMaleIndex].name;\n      const previewUrlMale = maleVoices[randomMaleIndex].preview_url;\n      const labelsMale = maleVoices[randomMaleIndex].labels;\n      // Get the random female\n      const randomFemaleVoiceId = femaleVoices[randomFemaleIndex].voice_id;\n      const nameFemale = femaleVoices[randomFemaleIndex].name;\n      const previewUrlFemale = femaleVoices[randomFemaleIndex].preview_url;\n      const labelsFemale = femaleVoices[randomFemaleIndex].labels;\n\n      // Get a random index within the range of voicelist length\n      const randomIndex = Math.floor(Math.random() * voicelist.length);\n\n      // Get the random\n      const randomVoiceId = voicelist[randomIndex].voice_id;\n      const name = voicelist[randomIndex].name;\n      const previewUrl = voicelist[randomIndex].preview_url;\n      const labels = voicelist[randomIndex].labels;\n\n      return [\n        {\n          voiceIdselected: randomVoiceId,\n          name: name,\n          previewUrl: previewUrl,\n          labels: labels,\n        },\n        {\n          voiceIdselected: randomMaleVoiceId,\n          name: nameMale,\n          previewUrl: previewUrlMale,\n          labels: labelsMale,\n        },\n        {\n          voiceIdselected: randomFemaleVoiceId,\n          name: nameFemale,\n          previewUrl: previewUrlFemale,\n          labels: labelsFemale,\n        }\n      ];\n\n    } catch (error) {\n      logging.log({ error });\n      return undefined; // Handle any errors\n    }\n  } else {\n    // Do I return here right?\n    return [\n  {\n    \"labels\": {\n      \"accent\": \"american\",\n      \"age\": \"young\",\n      \"description\": \"calm\",\n      \"gender\": \"female\",\n      \"use case\": \"narration\"\n    },\n    \"name\": \"Rachel\",\n    \"previewUrl\": \"https://storage.googleapis.com/eleven-public-prod/premade/voices/21m00Tcm4TlvDq8ikWAM/df6788f9-5c96-470d-8312-aab3b3d8f50a.mp3\",\n    \"voiceIdselected\": \"21m00Tcm4TlvDq8ikWAM\"\n  },\n  {\n    \"labels\": {\n      \"accent\": \"american\",\n      \"age\": \"middle aged\",\n      \"description\": \"soldier\",\n      \"gender\": \"male\",\n      \"use case\": \"audiobook\"\n    },\n    \"name\": \"Ryan\",\n    \"previewUrl\": \"https://storage.googleapis.com/eleven-public-prod/premade/voices/wViXBPUzp2ZZixB1xQuM/4a82f749-889c-4097-85f0-a3826a28b1d8.mp3\",\n    \"voiceIdselected\": \"wViXBPUzp2ZZixB1xQuM\"\n  },\n  {\n    \"labels\": {\n      \"accent\": \"american\",\n      \"age\": \"young\",\n      \"description\": \"soft\",\n      \"gender\": \"female\",\n      \"use case\": \"narration\"\n    },\n    \"name\": \"Sarah\",\n    \"previewUrl\": \"https://storage.googleapis.com/eleven-public-prod/premade/voices/EXAVITQu4vr4xnSDxMaL/6851ec91-9950-471f-8586-357c52539069.mp3\",\n    \"voiceIdselected\": \"EXAVITQu4vr4xnSDxMaL\"\n  }\n];\n\n  }\n  return null; // Return null if row.isAvatarTalking is false\n};\nexport default derivative;\n",
+          "listenerFields": [
+            "createdBy"
+          ],
+          "renderFieldType": "JSON"
+        },
+        "fieldName": "elevenlabsVoiceId",
+        "index": 9,
+        "key": "elevenlabsVoiceId",
+        "name": "Elevenlabs Voice Id",
+        "type": "DERIVATIVE"
+      },
+      "genImageRequest": {
+        "config": {
+          "derivativeFn": "import OpenAI from \"openai\";\nconst derivative = async ({ row, ref, db, storage, auth, logging }) => {\n  try {\n    //OpenAI key\n    const openaiApiKey = await rowy.secrets.get(\"openai\");\n    if (!openaiApiKey) {\n      throw new Error('OpenAI API key not found');\n    }\n    const openai = new OpenAI({ apiKey: openaiApiKey });\n\n    // Check if requestTopic is created\n    if (!row.requestTopic || row.requestTopic.length === 0) {\n      return undefined; // No valid requestTopic\n    }\n\n    const topic = row.requestTopic\n    const prompt = `Create a detailed and vibrant image that embodies the essence of '${topic}' in a learning context. The image should feature a variety of associated items, actions, and concepts that one would expect to find within this subject. Include interactive elements such as people or characters engaging with the environment or objects that are labeled with their names in both English and the target language. The labels should be clear and legible, complementing a scene filled with activity and educational cues. The artwork must be captivating and informative, suitable for a diverse learning audience, from children to adults.`\n     // API call to OpenAI\n    const response = await openai.images.generate({\n      model: \"dall-e-3\",\n      prompt: prompt\n    });\n\n    // Retrieve only the first URL from the response because n Defaults to 1\n    const firstResponseUrl = response.data[0]?.url;\n    if (!firstResponseUrl) {\n      throw new Error('No response data found');\n    }\n    // return firstResponseUrl;\n    logging.log('Image generated:', firstResponseUrl)\n\n    //Upload to filestore\n    const genRequestImage = await rowy.storage.upload.url(firstResponseUrl, {\n      folderPath: ref.path + '/requestStory/'\n    });\n    return genRequestImage.downloadURL;\n\n  } catch (error) {\n    if (error instanceof OpenAI.APIError) {\n      logging.log(\"OpenAI API Error:\", error.name, \"Status:\", error.status);\n    } else {\n      logging.log(\"Error:\", error.message);\n    }\n    return undefined;\n  }\n};",
+          "listenerFields": [
+            "requestTopic"
+          ],
+          "renderFieldType": "URL"
+        },
+        "fieldName": "genImageRequest",
+        "index": 5,
+        "key": "genImageRequest",
+        "name": "Gen Image Request",
+        "type": "DERIVATIVE"
+      },
+      "index": {
+        "config": {
+          "derivativeFn": "\nconst derivative: Derivative = async ({ row, ref, db, storage, auth, logging }) => {\n  logging.log(\"derivative started\");\n\n  // Proceed only if display is true\n    if (row.display) {\n      // Ensure 'language' and 'category' are present and non-empty strings\n      const { language, category } = row.level;\n      if (typeof language === 'string' && language && typeof category === 'string' && category) {\n        // Convert language and category to lowercase\n        const key = `${language.toLowerCase()}_${category.toLowerCase()}`;\n        logging.log(`Key generated: ${key}`);\n        return key;\n      } else {\n        logging.error(\"Language or category is missing or invalid.\");\n        return null;\n      }\n    }\n\n    // Return null if display is not true\n    return null;\n};\n\nexport default derivative;\n",
+          "listenerFields": [
+            "display",
+            "level"
+          ],
+          "renderFieldType": "SIMPLE_TEXT"
+        },
+        "fieldName": "index",
+        "index": 17,
+        "key": "index",
+        "name": "index",
+        "type": "DERIVATIVE"
+      },
+      "level": {
+        "config": {
+        },
+        "fieldName": "level",
+        "index": 2,
+        "key": "level",
+        "name": "Level",
+        "type": "JSON"
+      },
+      "limestones": {
+        "config": {
+        },
+        "fieldName": "limestones",
+        "index": 15,
+        "key": "limestones",
+        "name": "Limestones",
+        "type": "NUMBER"
+      },
+      "motherTongue": {
+        "config": {
+        },
+        "fieldName": "motherTongue",
+        "index": 3,
+        "key": "motherTongue",
+        "name": "Mother Tongue",
+        "type": "SIMPLE_TEXT"
+      },
+      "requestTopic": {
+        "config": {
+        },
+        "fieldName": "requestTopic",
+        "index": 4,
+        "key": "requestTopic",
+        "name": "Request Topic",
+        "type": "SIMPLE_TEXT"
+      },
+      "story": {
+        "config": {
+          "derivativeFn": "import OpenAI from \"openai\";\n\nconst derivative: Derivative = async ({ row, ref, db, storage, auth, logging }) => {\n  try {\n    const openaiApiKey = await rowy.secrets.get(\"openai\");\n    if (!openaiApiKey) {\n      throw new Error('OpenAI API key not found');\n    }\n    const openai = new OpenAI({ apiKey: openaiApiKey });\n\n    if (row.uploadImage || row.uploadImage.length > 0 || row.requestTopic || row.requestTopic.length > 0) {\n      //Start function\n      // Ensure each piece of data is valid; use fallback values if not\n      const language = (row.level && row.level.language) || 'English';\n      const motherTongue = row.motherTongue || 'en';\n      const levelCategory = (row.level && row.level.category) || 'Beginner';\n      const levelScore = (row.level && row.level.score !== undefined && row.level.score !== null) ? `${row.level.score}/5` : '1/5';\n\n      // Construct userText with validated or fallback data\n      const userText = `Target language: ${language}. User's mother tongue: ${motherTongue}. User's level: ${levelCategory} ${levelScore}`;\n\n\n      // Check model\n      let model = `gpt-4-vision-preview`; // Default model\n      let focusOn = `image`; // Default focus\n      if (row.requestTopic && row.requestTopic.length > 0) {\n        model = `gpt-4-1106-preview`;\n      }\n      let userContent; // Declare userContent outside the switch to access it later\n      switch (model) {\n        case \"gpt-4-vision-preview\":\n          userContent = [\n            { type: \"text\", text: userText },\n            { type: \"image_url\", image_url: row.uploadImage },\n          ];\n          break; \n        case \"gpt-4-1106-preview\":\n          userContent = `Topic: ${row.requestTopic}. ${userText}`;\n          focusOn = `topic`;\n          break; \n      }\n\n      const systemprompt = `Imagine two characters living within the context of the '${focusOn}'. Creative a conversation between these characters as they interact in this '${focusOn}' setting. Develop a conversation between these two characters that includes greetings, questions, and responses, all while keeping the context of the '${focusOn}' in mind. \n                      Encourage learners to use descriptive language to convey their surroundings and engage in a friendly, informative conversation, fun, happy to learn. This conversation practice is tailored for language learners at the specified level.\n                      Generate a set of conversation data in the form of a JSON array object with the following structure:\n                      [\n                        {\n                          \"name\": \"Character Name\",\n                          \"gender\": \"Character Gender\",\n                          \"text\": \"Character's Dialogue into target language\",\n                          \"textTranslate\": \"Character's Dialogue into mother tongue\"\n                        }\n                      ]`;\n\n      // API call to OpenAI\n      const response = await openai.chat.completions.create({\n        model: model,\n        messages: [\n          { role: \"system\", content: systemprompt },\n          { role: \"user\", content: userContent },\n        ],\n        temperature: 1,\n        max_tokens: 4095,\n        top_p: 1,\n        frequency_penalty: 0,\n        presence_penalty: 0,\n      });\n\n      const responseData = response.choices[0].message.content;\n      if (!responseData) {\n        throw new Error('No response data found');\n      }\n\n      // Regular expression to find only arry JSON object\n      const regex = /(\\[.*\\])/s; // find a JSON object or array /(\\{.*\\}|\\[.*\\])/s\n      // Extract JSON string using the regular expression.\n      const jsonPart = responseData.match(regex);\n\n      // Safe JSON parsing\n      try {\n        if (jsonPart) {\n          const responseDataJson = JSON.parse(jsonPart);\n          await ref.update({ storyJson: responseDataJson });\n          return focusOn;\n        } else {\n          throw new Error('JSON part not found in the response data');\n        }\n      } catch (e) {\n        logging.error('Error parsing JSON:', e.message);\n        // Return the raw response data since JSON parsing failed\n        return responseData;\n      }\n    }\n    return undefined;\n\n  } catch (error) {\n    if (error instanceof OpenAI.APIError) {\n      logging.log(\"OpenAI API Error:\", error.name, \"Status:\", error.status);\n    } else {\n      logging.log(\"Error:\", error.message);\n    }\n\n    return `false`;\n  }\n\n};\nexport default derivative;\n",
+          "listenerFields": [
+            "uploadImage",
+            "requestTopic",
+            "level",
+            "motherTongue"
+          ],
+          "renderFieldType": "SIMPLE_TEXT"
+        },
+        "fieldName": "story",
+        "index": 7,
+        "key": "story",
+        "name": "Story",
+        "type": "DERIVATIVE"
+      },
+      "storyAudioE": {
+        "config": {
+          "derivativeFn": "import fetch from 'node-fetch';\n\nasync function processBatch(batch, elevenlabsApiKey, row, ref, logging) {\n  return Promise.all(batch.map(async (textInfo) => {\n    if (textInfo.text) {\n      let voice;\n      switch (textInfo.gender) {\n        case 'Male':\n          voice = row.elevenlabsVoiceId[1].voiceIdselected;\n          break;\n        case 'Female':\n          voice = row.elevenlabsVoiceId[2].voiceIdselected;\n          break;\n        default:\n          voice = row.elevenlabsVoiceId[0].voiceIdselected;\n      }\n\n      const apiUrl = `https://api.elevenlabs.io/v1/text-to-speech/${voice}?optimize_streaming_latency=0`;\n      const requestBody = {\n        text: textInfo.text,\n        model_id: \"eleven_multilingual_v2\",\n        voice_settings: {\n          stability: 0.5,\n          similarity_boost: 0,\n          style: 0,\n          use_speaker_boost: true\n        }\n      };\n\n       const response = await fetch(apiUrl, {\n        method: 'POST',\n        headers: {\n          'Accept': 'audio/mpeg',\n          'xi-api-key': elevenlabsApiKey,\n          'Content-Type': 'application/json',\n        },\n        body: JSON.stringify(requestBody),\n      });\n\n      if (response.ok) {\n        const audioBuffer = await response.buffer();\n        const file = await rowy.storage.upload.data(audioBuffer, {\n          folderPath: ref.path + '/speech/'\n        });\n\n        textInfo.textAudio = file.downloadURL;\n      } else {\n        const errorMessage = `API call failed for text '${textInfo.text}': ${response.status} ${response.statusText}`;\n        logging.error(errorMessage);\n      }\n    }\n    return textInfo;\n  }));\n}\nconst derivative: Derivative = async ({ row, ref, db, storage, auth, logging }) => {\n  \n  try {\n    const elevenlabsApiKey = await rowy.secrets.get('elevenlabs');\n    if (!elevenlabsApiKey) {\n      throw new Error('ElevenLabs API key not found');\n    }\n\n    if (!Array.isArray(row.storyJson) || row.storyJson.length === 0) {\n      return undefined;\n    }\n\n    const batchSize = 3; // For the Starter plan\n    let results = [];\n\n    for (let i = 0; i < row.storyJson.length; i += batchSize) {\n      const batch = row.storyJson.slice(i, i + batchSize);\n      const batchResults = await processBatch(batch, elevenlabsApiKey, row, ref, logging);\n      results = [...results, ...batchResults];\n      await new Promise(resolve => setTimeout(resolve, 1000)); // 1-second delay between batches\n    }\n\n    row.storyJson = results;\n    return row.storyJson;\n  } catch (error) {\n    logging.error('Error:', error.message);\n    return { error: error.message };\n  }\n\n  return false;\n};\n\nexport default derivative;",
+          "listenerFields": [
+            "storyJson",
+            "elevenlabsVoiceId"
+          ],
+          "renderFieldType": "JSON"
+        },
+        "fieldName": "storyAudioE",
+        "index": 10,
+        "key": "storyAudioE",
+        "name": "Story Audio E",
+        "type": "DERIVATIVE"
+      },
+      "storyJson": {
+        "config": {
+        },
+        "fieldName": "storyJson",
+        "index": 8,
+        "key": "storyJson",
+        "name": "Story Json",
+        "type": "JSON"
+      },
+      "uploadImage": {
+        "config": {
+        },
+        "fieldName": "uploadImage",
+        "index": 6,
+        "key": "uploadImage",
+        "name": "Upload Image",
+        "type": "URL"
+      },
+      "words": {
+        "config": {
+          "derivativeFn": "import OpenAI from \"openai\";\nconst derivative: Derivative = async ({ row, ref, db, storage, auth, logging }) => {\n  try {\n    const openaiApiKey = await rowy.secrets.get(\"openai\");\n    if (!openaiApiKey) {\n      throw new Error('OpenAI API key not found');\n    }\n    const openai = new OpenAI({ apiKey: openaiApiKey });\n    // Check if image is uploaded\n    if (!row.storyJson || row.storyJson.length === 0 || !row.limestones || row.limestones <= 0) {\n        return undefined;\n    }\n    //Start Function\n    const motherTongue = row.motherTongue || 'en';\n    const storyData = row.storyJson.map(item => `${item.name}: ${item.text}`);\n    const userText = `The story is as follows: ${storyData.join('. ')}`;\n\n    const systemprompt = `You are a language model tasked with extracting key vocabulary words from a story conversation lesson and providing explanations for these words in mother tongue: ${motherTongue}. \n                          Your task is to identify important or challenging words in the story that might be new or difficult for a learner. For each identified word, provide a brief explanation or definition in mother tongue: ${motherTongue}, along with an example sentence showing how the word is used in context.\n                      Generate at least ${row.storyJson.length} words data in the form of a JSON object with the following structure:\n                      [\n                        {\n                          \"word\": \"<Identified Word>\",\n                          \"explain\": {\n                            \"definition\": \"<Definition in ${motherTongue}>\",\n                            \"example\": \"<Example Sentence>\"\n                          }\n                        },\n                        // More entries here\n                      ]`;\n\n    // API call to OpenAI\n    const response = await openai.chat.completions.create({\n      model: 'gpt-3.5-turbo-1106',\n      messages: [\n        { role: \"system\", content: systemprompt },\n        { role: \"user\", content: userText },\n      ],\n    });\n\n    const responseData = response.choices[0].message?.content;\n    if (!responseData) {\n      throw new Error('No response data found');\n    }\n\n   // Regular expression to find only arry JSON object\n    const regex = /(\\[.*\\])/s; // find a JSON object or array /(\\{.*\\}|\\[.*\\])/s\n    // Extract JSON string using the regular expression.\n    const jsonPart = responseData.match(regex);\n\n    // Safe JSON parsing\n    try {\n      if (jsonPart) {\n        const responseDataJson = JSON.parse(jsonPart);\n        return responseDataJson;\n      } else {\n        throw new Error('JSON part not found in the response data');\n      }\n    } catch (e) {\n      logging.error('Error parsing JSON:', e.message);\n      // Return the raw response data since JSON parsing failed\n      return responseData;\n    }\n\n\n  } catch (error) {\n    if (error instanceof OpenAI.APIError) {\n      logging.log(\"OpenAI API Error:\", error.name, \"Status:\", error.status);\n    } else {\n      logging.log(\"Error:\", error.message);\n    }\n\n    return `false`;\n  }\n};\nexport default derivative;",
+          "listenerFields": [
+            "storyJson",
+            "motherTongue",
+            "level"
+          ],
+          "renderFieldType": "JSON"
+        },
+        "fieldName": "words",
+        "index": 11,
+        "key": "words",
+        "name": "Words",
+        "type": "DERIVATIVE"
+      },
+      "wordsE": {
+        "config": {
+          "derivativeFn": "import fetch from 'node-fetch';\n\nasync function processBatch(batch, elevenlabsApiKey, row, ref, logging) {\n  return Promise.all(batch.map(async (textInfo) => {\n    if (textInfo.word) {\n      let voice;\n      // Randomly select an index from the elevenlabsVoiceId array\n      const randomIndex = Math.floor(Math.random() * row.elevenlabsVoiceId.length);\n      // Assign the randomly selected voice\n      voice = row.elevenlabsVoiceId[randomIndex].voiceIdselected;\n\n      const apiUrl = `https://api.elevenlabs.io/v1/text-to-speech/${voice}?optimize_streaming_latency=0`;\n      const requestBody = {\n        text: textInfo.word,\n        model_id: \"eleven_multilingual_v2\",\n        voice_settings: {\n          stability: 0.5,\n          similarity_boost: 0,\n          style: 0,\n          use_speaker_boost: true\n        }\n      };\n\n      const response = await fetch(apiUrl, {\n        method: 'POST',\n        headers: {\n          'Accept': 'audio/mpeg',\n          'xi-api-key': elevenlabsApiKey,\n          'Content-Type': 'application/json',\n        },\n        body: JSON.stringify(requestBody),\n      });\n\n      if (response.ok) {\n        const audioBuffer = await response.buffer();\n        const file = await rowy.storage.upload.data(audioBuffer, {\n          folderPath: ref.path + '/words/'\n        });\n\n        textInfo.textAudio = file.downloadURL;\n      } else {\n        const errorMessage = `API call failed for text '${textInfo.word}': ${response.status} ${response.statusText}`;\n        logging.error(errorMessage);\n      }\n    }\n    return textInfo;\n  }));\n}\n\nconst derivative = async ({ row, ref, db, storage, auth, actionParams, user, logging }) => {\n  try {\n    const elevenlabsApiKey = await rowy.secrets.get('elevenlabs');\n    if (!elevenlabsApiKey) {\n      throw new Error('ElevenLabs API key not found');\n    }\n\n    if (!Array.isArray(row.words) || row.words.length === 0) {\n      return undefined;\n    }\n\n    const batchSize = 3; // For the Starter plan\n    let results = [];\n\n    for (let i = 0; i < row.words.length; i += batchSize) {\n      const batch = row.words.slice(i, i + batchSize);\n      const batchResults = await processBatch(batch, elevenlabsApiKey, row, ref, logging);\n      results = [...results, ...batchResults];\n      await new Promise(resolve => setTimeout(resolve, 1000)); // 1-second delay between batches\n    }\n\n    row.words = results;\n    return row.words;\n  } catch (error) {\n    logging.error('Error:', error.message);\n    return { error: error.message };\n  }\n\n  return false;\n};\n\nexport default derivative;",
+          "listenerFields": [
+            "words",
+            "elevenlabsVoiceId"
+          ],
+          "renderFieldType": "JSON"
+        },
+        "fieldName": "wordsE",
+        "index": 12,
+        "key": "wordsE",
+        "name": "Words E",
+        "type": "DERIVATIVE"
+      }
+    },
+    "functionConfigPath": "_rowy_/settings/functions/stories",
+    "lastUpdatedGitHubUser": {
+      "email": "sagolab.com@gmail.com",
+      "username": "sagolab.com@gmail.com"
+    },
+    "rowHeight": 33,
+    "subTables": {
+      "userCompleted": {
+        "columns": {
+          "createdAt": {
+            "config": {
+            },
+            "fieldName": "createdAt",
+            "index": 0,
+            "key": "createdAt",
+            "name": "createdAt",
+            "type": "DATE_TIME"
+          },
+          "percent": {
+            "config": {
+            },
+            "fieldName": "percent",
+            "index": 2,
+            "key": "percent",
+            "name": "percent",
+            "type": "NUMBER"
+          },
+          "user": {
+            "config": {
+            },
+            "fieldName": "user",
+            "index": 1,
+            "key": "user",
+            "name": "user",
+            "type": "REFERENCE"
+          }
+        },
+        "lastUpdatedGitHubUser": {
+          "email": "sagolab.com@gmail.com",
+          "username": "sagolab.com@gmail.com"
+        }
+      }
+    }
+  },
+  "audit": false,
+  "collection": "stories",
+  "description": "",
+  "id": "stories",
+  "name": "Stories",
+  "rules": {
+    "create": [
+      "ADMIN",
+      "OWNER"
+    ],
+    "delete": [
+      "ADMIN",
+      "OWNER"
+    ],
+    "read": [
+      "ADMIN",
+      "EDITOR",
+      "OWNER"
+    ],
+    "update": [
+      "ADMIN",
+      "OWNER"
+    ]
+  },
+  "sameRuleForSubCollections": false,
+  "searchIndex": "",
+  "section": "Lesson",
+  "tableType": "primaryCollection",
+  "thumbnailURL": "",
+  "_searchEnabled": false
+}
