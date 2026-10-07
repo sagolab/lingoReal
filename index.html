@@ -4,98 +4,258 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lingo Real — Language Apps That Make You Speak</title>
-  <meta name="description" content="Real language learning apps built for speaking and exam practice. Not flashcards. Real practice with real results.">
+  <meta name="description" content="A family of language-learning apps built for real practice: speaking with AI, everyday English, pronunciation, vocabulary and IELTS exam prep.">
+  <meta property="og:title" content="Lingo Real — Language Apps That Make You Speak">
+  <meta property="og:description" content="Eight apps, one idea: learn a language by using it. Speaking, pronunciation, vocabulary and IELTS practice.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://lingoreal.com/">
+  <meta name="theme-color" content="#0b0a14">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌍</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --bg: #0b0a14; --bg-2: #12101f; --card: #161427; --card-hover: #1c1931;
+      --line: rgba(255,255,255,.08); --line-strong: rgba(255,255,255,.16);
+      --text: #f2f0fa; --muted: #a29fb8; --faint: #6f6b88;
+      --brand: #7c5cfc; --brand-2: #b69cff; --mint: #4be3b0; --amber: #ffb547;
+      --radius: 22px;
+    }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0a0f; color: #e0e0e0; }
-    a { color: #7c5cfc; text-decoration: none; }
-    a:hover { text-decoration: underline; }
+    html { scroll-behavior: smooth; }
+    body { font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; line-height: 1.5; }
+    a { color: inherit; text-decoration: none; }
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 0 20px; }
 
-    .hero {
-      min-height: 60vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
-      text-align: center; padding: 80px 24px;
-      background: linear-gradient(135deg, #0a0a1a 0%, #1a1040 100%);
-    }
-    .hero h1 { font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 800; color: #fff; margin-bottom: 16px; }
-    .hero h1 span { color: #7c5cfc; }
-    .hero p { font-size: 1.25rem; color: #999; max-width: 600px; line-height: 1.6; }
+    /* Nav */
+    nav { position: sticky; top: 0; z-index: 10; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); background: rgba(11,10,20,.72); border-bottom: 1px solid var(--line); }
+    nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+    .logo { font-family: 'Bricolage Grotesque', Inter, sans-serif; font-weight: 800; font-size: 1.35rem; letter-spacing: -.02em; }
+    .logo span { color: var(--brand-2); }
+    .nav-links { display: flex; gap: 26px; font-size: .95rem; color: var(--muted); }
+    .nav-links a:hover { color: var(--text); }
 
-    .apps {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 32px; max-width: 1000px; margin: -40px auto 80px; padding: 0 24px;
-    }
-    .app-card {
-      background: #141420; border: 1px solid #222; border-radius: 20px;
-      padding: 40px 32px; transition: transform 0.2s, border-color 0.2s;
-    }
-    .app-card:hover { transform: translateY(-4px); border-color: #7c5cfc; }
-    .app-card .emoji { font-size: 3rem; margin-bottom: 16px; }
-    .app-card h2 { font-size: 1.5rem; color: #fff; margin-bottom: 8px; }
-    .app-card .tagline { color: #888; font-size: 1rem; margin-bottom: 20px; line-height: 1.5; }
-    .app-card .badge { display: inline-block; background: #7c5cfc; color: #fff; padding: 10px 24px; border-radius: 12px; font-weight: 600; font-size: 0.95rem; }
-    .app-card .badge:hover { background: #6a4ce0; text-decoration: none; }
-    .app-card .badge.coming { background: #333; color: #666; cursor: default; }
+    /* Hero */
+    .hero { position: relative; overflow: hidden; padding: 96px 0 72px; text-align: center; }
+    .hero::before { content: ""; position: absolute; inset: -40% -10% auto; height: 640px; background: radial-gradient(closest-side, rgba(124,92,252,.35), transparent 70%); pointer-events: none; }
+    .hero::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 100%; background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px); background-size: 56px 56px; mask-image: radial-gradient(ellipse at 50% 30%, #000 20%, transparent 70%); -webkit-mask-image: radial-gradient(ellipse at 50% 30%, #000 20%, transparent 70%); opacity: .5; pointer-events: none; }
+    .hero > .wrap { position: relative; z-index: 1; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px; border: 1px solid var(--line-strong); border-radius: 999px; font-size: .85rem; color: var(--muted); background: rgba(255,255,255,.03); }
+    .eyebrow i { width: 7px; height: 7px; border-radius: 50%; background: var(--mint); box-shadow: 0 0 10px var(--mint); }
+    .hero h1 { font-family: 'Bricolage Grotesque', Inter, sans-serif; font-weight: 800; font-size: clamp(2.6rem, 7vw, 5rem); line-height: 1.02; letter-spacing: -.035em; margin: 22px auto 20px; max-width: 900px; }
+    .hero h1 em { font-style: normal; background: linear-gradient(90deg, var(--brand-2), var(--mint)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .hero p.lead { font-size: clamp(1.05rem, 2.2vw, 1.25rem); color: var(--muted); max-width: 640px; margin: 0 auto; }
+    .hero .cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 34px; }
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 13px 22px; border-radius: 14px; font-weight: 600; font-size: .98rem; transition: transform .15s ease, background .15s ease; }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-primary { background: var(--brand); color: #fff; box-shadow: 0 8px 30px rgba(124,92,252,.35); }
+    .btn-primary:hover { background: #8d71ff; }
+    .btn-ghost { border: 1px solid var(--line-strong); color: var(--text); }
+    .btn-ghost:hover { background: rgba(255,255,255,.05); }
+    .icon-row { display: flex; justify-content: center; margin-top: 52px; }
+    .icon-row img { width: 64px; height: 64px; border-radius: 16px; border: 3px solid var(--bg); margin-left: -12px; box-shadow: 0 10px 24px rgba(0,0,0,.45); }
+    .icon-row img:first-child { margin-left: 0; }
 
-    .footer {
-      text-align: center; padding: 60px 24px; border-top: 1px solid #1a1a2a;
-      color: #555; font-size: 0.9rem;
+    /* Pillars */
+    .pillars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 8px 0 88px; }
+    .pillar { padding: 24px; border: 1px solid var(--line); border-radius: var(--radius); background: linear-gradient(180deg, rgba(255,255,255,.025), transparent); }
+    .pillar b { display: block; font-size: 1.05rem; margin: 10px 0 6px; }
+    .pillar p { color: var(--muted); font-size: .95rem; }
+    .pillar .dot { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; font-size: 1.2rem; background: rgba(124,92,252,.14); }
+
+    /* Sections */
+    section.group { margin-bottom: 72px; scroll-margin-top: 84px; }
+    .group-head { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 22px; flex-wrap: wrap; }
+    .group-head h2 { font-family: 'Bricolage Grotesque', Inter, sans-serif; font-size: clamp(1.6rem, 3.4vw, 2.2rem); letter-spacing: -.02em; }
+    .group-head p { color: var(--muted); max-width: 480px; }
+    .kicker { display: block; font-size: .8rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--brand-2); margin-bottom: 6px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px; }
+
+    .app { display: flex; flex-direction: column; padding: 24px; border-radius: var(--radius); background: var(--card); border: 1px solid var(--line); transition: border-color .2s ease, background .2s ease, transform .2s ease; }
+    .app:hover { background: var(--card-hover); border-color: var(--line-strong); transform: translateY(-2px); }
+    .app-top { display: flex; gap: 16px; align-items: center; margin-bottom: 16px; }
+    .app-top img { width: 64px; height: 64px; border-radius: 15px; flex: none; box-shadow: 0 6px 18px rgba(0,0,0,.35); }
+    .app h3 { font-size: 1.18rem; font-weight: 700; letter-spacing: -.01em; }
+    .app .sub { color: var(--faint); font-size: .88rem; }
+    .app p.desc { color: var(--muted); font-size: .97rem; flex: 1; }
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 16px 0 20px; }
+    .tags span { font-size: .78rem; color: var(--muted); padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); }
+    .app-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px 12px; flex-wrap: wrap; }
+    .status, .pill { white-space: nowrap; }
+    .status { font-size: .8rem; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+    .status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; }
+    .status.live { color: var(--mint); } .status.live::before { background: var(--mint); }
+    .status.soon { color: var(--amber); } .status.soon::before { background: var(--amber); }
+    .app-foot .actions { display: flex; gap: 8px; }
+    .pill { padding: 9px 15px; border-radius: 11px; font-size: .88rem; font-weight: 600; }
+    .pill.solid { background: var(--brand); color: #fff; }
+    .pill.solid:hover { background: #8d71ff; }
+    .pill.line { border: 1px solid var(--line-strong); }
+    .pill.line:hover { background: rgba(255,255,255,.05); }
+
+    /* Closing */
+    .closing { margin: 24px 0 96px; padding: 48px 32px; border-radius: 28px; text-align: center; background: radial-gradient(circle at 50% 0%, rgba(124,92,252,.28), transparent 60%), var(--bg-2); border: 1px solid var(--line); }
+    .closing h2 { font-family: 'Bricolage Grotesque', Inter, sans-serif; font-size: clamp(1.7rem, 4vw, 2.5rem); letter-spacing: -.02em; margin-bottom: 10px; }
+    .closing p { color: var(--muted); max-width: 560px; margin: 0 auto 24px; }
+
+    footer { border-top: 1px solid var(--line); padding: 36px 0 48px; color: var(--faint); font-size: .9rem; }
+    footer .wrap { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+    footer .links { display: flex; gap: 22px; flex-wrap: wrap; }
+    footer a:hover { color: var(--text); }
+
+    @media (max-width: 820px) {
+      .pillars { grid-template-columns: 1fr; }
+      .nav-links { display: none; }
+      .hero { padding: 64px 0 56px; }
+      .grid { grid-template-columns: 1fr; }
+      .icon-row img { width: 48px; height: 48px; border-radius: 12px; margin-left: -10px; }
     }
-    .footer-links { margin-bottom: 16px; }
-    .footer-links a { margin: 0 16px; color: #777; }
-    .footer-links a:hover { color: #7c5cfc; }
+    @media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
   </style>
 </head>
 <body>
-  <div class="hero">
-    <h1>Lingo <span>Real</span></h1>
-    <p>Language apps built for speaking and exam practice. Not flashcards. Real practice with real results.</p>
-  </div>
+  <nav>
+    <div class="wrap">
+      <a href="/" class="logo">Lingo <span>Real</span></a>
+      <div class="nav-links">
+        <a href="#speak">Speak</a>
+        <a href="#everyday">Everyday English</a>
+        <a href="#exam">Exams</a>
+        <a href="#words">Words &amp; teaching</a>
+      </div>
+    </div>
+  </nav>
 
-  <div class="apps">
-    <div class="app-card">
-      <div class="emoji">🎬</div>
-      <h2>SpeakSwipe</h2>
-      <p class="tagline">Swipe through native speaker videos. Repeat every phrase out loud. Get AI pronunciation scores instantly.</p>
-      <a href="https://apps.apple.com/us/app/speakswipe-talk-like-a-local/id6759364719" class="badge">Download</a>
+  <header class="hero">
+    <div class="wrap">
+      <span class="eyebrow"><i></i> A family of 8 language apps</span>
+      <h1>Learn a language by <em>actually using it</em></h1>
+      <p class="lead">Lingo Real builds focused apps for one kind of practice each: speaking with AI, everyday English, pronunciation, vocabulary and IELTS exam practice. Not flashcards. Real practice with real results.</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="#speak">Explore the apps</a>
+        <a class="btn btn-ghost" href="mailto:support@lingoreal.com">Contact us</a>
+      </div>
+      <div class="icon-row" aria-hidden="true">
+        <img src="/assets/apps/lingoreal.png" alt="">
+        <img src="/assets/apps/speakswipe.png" alt="">
+        <img src="/assets/apps/verbally.png" alt="">
+        <img src="/assets/apps/dilo.png" alt="">
+        <img src="/assets/apps/copio.png" alt="">
+        <img src="/assets/apps/ieltsbattles.png" alt="">
+        <img src="/assets/apps/wordlens.png" alt="">
+        <img src="/assets/apps/teachers.png" alt="">
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="pillars">
+      <div class="pillar"><div class="dot">🎙️</div><b>Speak from day one</b><p>Every app gets you saying things out loud, with feedback on what to fix.</p></div>
+      <div class="pillar"><div class="dot">🎯</div><b>One app, one job</b><p>Pick the practice you need, whether that's conversation, pronunciation, vocabulary or exams, instead of one app that does everything halfway.</p></div>
+      <div class="pillar"><div class="dot">⏱️</div><b>Minutes a day</b><p>Short sessions that fit a commute or a coffee break, so practice becomes a habit.</p></div>
     </div>
 
-    <div class="app-card">
-      <div class="emoji">🗣️</div>
-      <h2>Verbally AI</h2>
-      <p class="tagline">AI-powered speech practice for professionals. Improve your presentation skills with real-time feedback.</p>
-      <a href="/verbally/" class="badge">Learn More</a>
-    </div>
+    <section class="group" id="speak">
+      <div class="group-head">
+        <div><span class="kicker">Speak with AI</span><h2>Conversation &amp; pronunciation</h2></div>
+        <p>Talk with an AI partner in real situations and get corrections as you go.</p>
+      </div>
+      <div class="grid">
+        <article class="app">
+          <div class="app-top"><img src="/assets/apps/lingoreal.png" alt="Lingo Real icon"><div><h3>Lingo Real</h3><div class="sub">AI language lessons</div></div></div>
+          <p class="desc">Turns your real life into language lessons. Practise speaking every day with a friendly AI partner, in scenes like ordering coffee, a hotel check-in or a job interview, with word-by-word pronunciation scores.</p>
+          <div class="tags"><span>Many languages</span><span>AI tutor</span><span>Daily plan</span></div>
+          <div class="app-foot"><span class="status live">On the App Store</span><div class="actions"><a class="pill solid" href="https://apps.apple.com/us/app/lingo-real-ai-language-lessons/id6473881992">Download</a></div></div>
+        </article>
+        <article class="app">
+          <div class="app-top"><img src="/assets/apps/speakswipe.png" alt="SpeakSwipe icon"><div><h3>SpeakSwipe</h3><div class="sub">Talk like a local</div></div></div>
+          <p class="desc">Swipe through native speaker videos and repeat every phrase out loud. Get AI pronunciation scores instantly.</p>
+          <div class="tags"><span>Native speakers</span><span>Pronunciation</span><span>Short videos</span></div>
+          <div class="app-foot"><span class="status live">On the App Store</span><div class="actions"><a class="pill solid" href="https://apps.apple.com/us/app/speakswipe-talk-like-a-local/id6759364719">Download</a></div></div>
+        </article>
+        <article class="app">
+          <div class="app-top"><img src="/assets/apps/verbally.png" alt="Verbally AI icon"><div><h3>Verbally AI</h3><div class="sub">Your English speaking coach</div></div></div>
+          <p class="desc">A 24/7 English conversation partner. Practise real conversations with AI tutors that adapt to your level, with instant feedback on pronunciation, grammar and word choice.</p>
+          <div class="tags"><span>English</span><span>Real-time feedback</span><span>Work &amp; presentations</span></div>
+          <div class="app-foot"><span class="status live">On the App Store</span><div class="actions"><a class="pill line" href="/verbally/">Learn more</a><a class="pill solid" href="https://apps.apple.com/us/app/speak-english-with-verbally-ai/id6740076311">Download</a></div></div>
+        </article>
+      </div>
+    </section>
 
-    <div class="app-card">
-      <div class="emoji">⚔️</div>
-      <h2>IELTS Battles</h2>
-      <p class="tagline">Ranked 1v1 IELTS Reading &amp; Listening battles in 10 minutes. Academic and General Training, with AI-estimated Speaking and Writing bands.</p>
-      <a href="https://ielts.lingoreal.com/" class="badge">Learn More</a>
-    </div>
+    <section class="group" id="everyday">
+      <div class="group-head">
+        <div><span class="kicker">Everyday English</span><h2>Practise inside your day</h2></div>
+        <p>English practice built into a 3D world or into what you already read on your phone.</p>
+      </div>
+      <div class="grid">
+        <article class="app">
+          <div class="app-top"><img src="/assets/apps/dilo.png" alt="Dilo icon"><div><h3>Dilo</h3><div class="sub">Speak English in scenes</div></div></div>
+          <p class="desc">Live a life in a 3D world as a farmer, office worker, student or traveller, and move it forward only by speaking English. Built for Spanish speakers.</p>
+          <div class="tags"><span>3D scenes</span><span>Speaking</span><span>For Spanish speakers</span></div>
+          <div class="app-foot"><span class="status soon">Coming soon</span><div class="actions"><a class="pill line" href="https://dilo.lingoreal.com/">Learn more</a></div></div>
+        </article>
+        <article class="app">
+          <div class="app-top"><img src="/assets/apps/copio.png" alt="Copio icon"><div><h3>Copio</h3><div class="sub">Copy it. Say it.</div></div></div>
+          <p class="desc">Copy any English sentence on your iPhone and say it back in 10 seconds. Hands-free, and it shows you the exact words to fix.</p>
+          <div class="tags"><span>Any text</span><span>Hands-free</span><span>Pronunciation</span></div>
+          <div class="app-foot"><span class="status soon">Coming soon</span><div class="actions"><a class="pill line" href="https://copio.lingoreal.com/">Learn more</a></div></div>
+        </article>
+      </div>
+    </section>
 
-    <div class="app-card">
-      <div class="emoji">🦎</div>
-      <h2>Dilo</h2>
-      <p class="tagline">Live a life in a 3D world (farmer, office worker, student, traveler) and move it forward only by speaking English. Built for Spanish speakers.</p>
-      <a href="https://dilo.lingoreal.com/" class="badge">Learn More</a>
-    </div>
+    <section class="group" id="exam">
+      <div class="group-head">
+        <div><span class="kicker">Exam prep</span><h2>IELTS, ten minutes at a time</h2></div>
+        <p>For anyone who needs a band score for study, work or a visa.</p>
+      </div>
+      <div class="grid">
+        <article class="app">
+          <div class="app-top"><img src="/assets/apps/ieltsbattles.png" alt="IELTS Battles icon"><div><h3>IELTS Battles</h3><div class="sub">Ranked 1v1 IELTS practice</div></div></div>
+          <p class="desc">Ranked 1v1 IELTS Reading and Listening battles on one 10-minute clock. Covers Academic and General Training, with AI-estimated Speaking and Writing bands.</p>
+          <div class="tags"><span>Academic &amp; GT</span><span>16 task types</span><span>Ranked play</span></div>
+          <div class="app-foot"><span class="status soon">Coming soon</span><div class="actions"><a class="pill line" href="https://ielts.lingoreal.com/">Learn more</a></div></div>
+        </article>
+      </div>
+    </section>
 
-    <div class="app-card">
-      <div class="emoji">📋</div>
-      <h2>Copio</h2>
-      <p class="tagline">Copy any English sentence on your iPhone and say it back in 10 seconds. Hands-free, with the exact words to fix.</p>
-      <a href="https://copio.lingoreal.com/" class="badge">Learn More</a>
-    </div>
-  </div>
+    <section class="group" id="words">
+      <div class="group-head">
+        <div><span class="kicker">Vocabulary &amp; teaching</span><h2>Words, and tools for teachers</h2></div>
+        <p>Build vocabulary from the world around you, or create lessons for a whole class.</p>
+      </div>
+      <div class="grid">
+        <article class="app">
+          <div class="app-top"><img src="/assets/apps/wordlens.png" alt="WordLens icon"><div><h3>WordLens</h3><div class="sub">Learn words game</div></div></div>
+          <p class="desc">Snap photos of objects around you, then learn their words through crossword puzzles built from your own pictures, with a new challenge every day.</p>
+          <div class="tags"><span>Camera</span><span>Crosswords</span><span>Daily challenge</span></div>
+          <div class="app-foot"><span class="status live">On the App Store</span><div class="actions"><a class="pill solid" href="https://apps.apple.com/us/app/wordlens-learn-words-game/id6502832752">Download</a></div></div>
+        </article>
+        <article class="app">
+          <div class="app-top"><img src="/assets/apps/teachers.png" alt="Teachers Copilot icon"><div><h3>Teachers Copilot</h3><div class="sub">AI classroom</div></div></div>
+          <p class="desc">A version of Lingo Real for teachers. Create, assign and manage AI-generated lessons and activities for your students, and track their progress.</p>
+          <div class="tags"><span>For teachers</span><span>AI lessons</span><span>Assignments</span></div>
+          <div class="app-foot"><span class="status live">On the App Store</span><div class="actions"><a class="pill solid" href="https://apps.apple.com/us/app/teachers-copilot-ai-classroom/id6503943739">Download</a></div></div>
+        </article>
+      </div>
+    </section>
 
-  <div class="footer">
-    <div class="footer-links">
-      <a href="/privacy/">Privacy Policy</a>
-      <a href="/terms/">Terms of Service</a>
-      <a href="mailto:support@lingoreal.com">Contact</a>
+    <div class="closing">
+      <h2>Not sure where to start?</h2>
+      <p>For conversation, start with Lingo Real. For pronunciation, try SpeakSwipe. For an IELTS score, try IELTS Battles.</p>
+      <a class="btn btn-primary" href="mailto:support@lingoreal.com">Ask us</a>
     </div>
-    <p>&copy; 2026 Lingo Real. All rights reserved.</p>
-  </div>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <p>&copy; 2026 Lingo Real. All rights reserved.<br><small>IELTS is a registered trademark of its owners. IELTS Battles is not affiliated with IELTS, Cambridge, the British Council or IDP.</small></p>
+      <div class="links">
+        <a href="/privacy/">Privacy Policy</a>
+        <a href="/terms/">Terms of Service</a>
+        <a href="mailto:support@lingoreal.com">Contact</a>
+      </div>
+    </div>
+  </footer>
 </body>
 </html>
